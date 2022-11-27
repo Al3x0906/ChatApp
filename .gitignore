@@ -1,0 +1,4 @@
+./git
+./git/*
+./idea*
+./frontend/node_modules*

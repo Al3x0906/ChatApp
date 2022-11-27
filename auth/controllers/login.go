@@ -5,7 +5,6 @@ import (
 	"chatapp/auth/models"
 	"fmt"
 	"github.com/astaxie/beego"
-	"html/template"
 )
 
 type LoginController struct {
@@ -56,12 +55,7 @@ func (c *LoginController) Logout() {
 }
 
 func (c *LoginController) Signup() {
-	c.TplName = "login/signup.tpl"
-	c.Data["xsrfdata"] = template.HTML(c.XSRFFormHTML())
-
-	if !c.Ctx.Input.IsPost() {
-		return
-	}
+	fmt.Println(c.Data)
 
 	var err error
 	flash := beego.NewFlash()
