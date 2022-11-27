@@ -4,7 +4,7 @@ import "./login.css";
 export default function Login() {
   const [isLogin, setisLogin] = React.useState(false);
 
-  const [user, setuser] = React.useState(false);
+  const [user, setuser] = React.useState(true);
 
   let switchModeHandler = (e) => {
     setisLogin(!isLogin);
