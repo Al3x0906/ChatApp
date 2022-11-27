@@ -24,7 +24,6 @@ export default function Login() {
       password: password,
     };
 
-
     if (user) {
       fetch("http://localhost:8080/login/", {
         method: "POST",
@@ -41,6 +40,13 @@ export default function Login() {
       fetch("http://localhost:8000/signup/", {
         method: "POST",
         body: JSON.stringify(requestBody),
+      }).then((res) => {
+        if (res.status !== 200) {
+          console.alert("Auth Failed!!");
+          throw new Error("Authentication Failed !!");
+        }
+        setuser(true);
+        console.alert("Successful!!");
       });
     }
   };
