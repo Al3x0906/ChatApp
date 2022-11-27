@@ -3,6 +3,7 @@ package controllers
 import (
 	"chatapp/auth/lib"
 	"chatapp/auth/models"
+	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego"
 )
@@ -31,10 +32,21 @@ func (c *LoginController) Login() {
 		c.ServeJSON()
 		return
 	}
+	type res struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
 
-	fmt.Println(c)
-	email := c.GetString("Email")
-	password := c.GetString("Password")
+	var response res
+	err := json.Unmarshal(c.Ctx.Input.RequestBody, &response)
+	if !(err == nil) {
+		c.Data["json"] = LoginUser{IsLogin: false, Userinfo: nil, Status: 401}
+		c.ServeJSON()
+		return
+	}
+
+	email := response.Email
+	password := response.Password
 
 	user, err := lib.Authenticate(email, password)
 	if err != nil || user.Id < 1 {
