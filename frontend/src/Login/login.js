@@ -1,52 +1,64 @@
-import React, { useState } from "react";
-
-import Form from "react-bootstrap/Form";
-import "../css/Login-Form-Dark.css"
-import Button from "react-bootstrap/Button";
-
-
+import React from "react";
+import ReactDOM from "react-dom";
+import "./login.css";
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [isLogin, setisLogin] = React.useState(false);
 
-  const [password, setPassword] = useState("");
+  const [user, setuser] = React.useState(false);
 
-  function validateForm() {
-    return email.length > 0 && password.length > 0;
-  }
+  let switchModeHandler = (e) => {
+    setisLogin(!isLogin);
+  };
 
-  function handleSubmit(event) {
-    event.preventDefault();
+  let submitHandler = (e) => {
+    e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    if (email.trim().length > 0 && password.trim().length > 0) {
+    } else {
+      console.alert("Password Or email too small");
+    }
 
-  }
-
+    let requestBody = {
+      email: email,
+      password: password,
+    };
+    if (user) {
+      fetch("http://localhost:8000/login/", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } else {
+      fetch("http://localhost:8000/signup/", {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+  };
   return (
-    <div className="Login login-dark">
-      <Form onSubmit={handleSubmit}>
-        <Form.Group size="lg" controlId="email">
-          <Form.Label>Email</Form.Label>
+    <form className="auth-form" onSubmit={submitHandler}>
+      <div className="form-control">
+        <label htmlFor="email">Email</label>
+        <input type="email" id="email" placeholder="Email"></input>
+      </div>
 
-          <Form.Control
-            autoFocus
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </Form.Group>
+      <div className="form-control">
+        <label htmlFor="password">Password</label>
+        <input type="password" id="password" placeholder="Password"></input>
+      </div>
 
-        <Form.Group size="lg" controlId="password">
-          <Form.Label>Password</Form.Label>
-
-          <Form.Control
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </Form.Group>
-
-        <Button block size="lg" type="submit" disabled={!validateForm()}>
-          Login
-        </Button>
-      </Form>
-    </div>
+      <div className="form-actions">
+        <button type="submit">Submit</button>
+        <button type="button" onClick={switchModeHandler}>
+          Switch To {isLogin ? "Sign Up " : "Login"}
+        </button>
+      </div>
+    </form>
   );
 }
