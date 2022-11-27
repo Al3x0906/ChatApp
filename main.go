@@ -12,8 +12,8 @@ func init() {
 }
 
 func main() {
-	orm.RegisterDriver("mysql", orm.DRMySQL)
-	orm.RegisterDataBase("default", "mysql", "root:root@/chatapp?charset=utf8")
+	_ = orm.RegisterDriver("mysql", orm.DRMySQL)
+	_ = orm.RegisterDataBase("default", "mysql", "root:root@/chatapp?charset=utf8")
 	fmt.Println("MySQL DataBase Connected")
 	beego.Run("localhost")
 }
