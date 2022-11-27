@@ -8,9 +8,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func init() {
-}
-
 func main() {
 	_ = orm.RegisterDriver("mysql", orm.DRMySQL)
 	_ = orm.RegisterDataBase("default", "mysql", "root:root@/chatapp?charset=utf8")

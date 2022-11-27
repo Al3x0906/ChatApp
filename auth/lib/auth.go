@@ -24,7 +24,7 @@ func Authenticate(email string, password string) (user *models.User, err error) 
 		return user, errors.New(msg)
 	} else {
 		user.Lastlogintime = time.Now()
-		user.Update("Lastlogintime")
+		_ = user.Update("Lastlogintime")
 		return user, nil
 	}
 }

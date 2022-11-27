@@ -11,47 +11,51 @@ type LoginController struct {
 	BaseController
 }
 
+type LoginUser struct {
+	IsLogin  bool         `json:"IsLogin"`
+	Userinfo *models.User `json:"Userinfo"`
+	Status   int          `json:"Status"`
+}
+
 func (c *LoginController) Login() {
 
 	if c.IsLogin {
-		c.Ctx.Redirect(302, c.URLFor("UsersController.Index"))
+		c.Data["json"] = LoginUser{IsLogin: c.IsLogin, Userinfo: c.Userinfo, Status: 200}
+		c.ServeJSON()
 		return
 	}
 
-	c.Data["json"] = fmt.Sprintf(`{"IsLogin":  %v, "userinfo": %v}`, c.IsLogin, c.Userinfo)
+	c.Data["json"] = LoginUser{IsLogin: false, Userinfo: nil, Status: 401}
 
 	if !c.Ctx.Input.IsPost() {
 		c.ServeJSON()
 		return
 	}
 
-	flash := beego.NewFlash()
 	fmt.Println(c)
 	email := c.GetString("Email")
 	password := c.GetString("Password")
 
 	user, err := lib.Authenticate(email, password)
 	if err != nil || user.Id < 1 {
-		flash.Warning(err.Error())
-		flash.Store(&c.Controller)
+		c.Data["json"] = LoginUser{IsLogin: false, Userinfo: nil, Status: 401}
+		c.ServeJSON()
 		return
 	}
 
-	flash.Success("Success logged in")
-	flash.Store(&c.Controller)
-
 	c.SetLogin(user)
 
-	c.Redirect(c.URLFor("UsersController.Index"), 303)
+	c.Data["json"] = LoginUser{IsLogin: c.IsLogin, Userinfo: c.Userinfo, Status: 200}
+	c.ServeJSON()
+
 }
 
 func (c *LoginController) Logout() {
 	c.DelLogin()
-	flash := beego.NewFlash()
-	flash.Success("Success logged out")
-	flash.Store(&c.Controller)
 
-	c.Ctx.Redirect(302, c.URLFor("LoginController.Login"))
+	c.Data["json"] = LoginUser{IsLogin: false, Userinfo: nil, Status: 200}
+	c.ServeJSON()
+
 }
 
 func (c *LoginController) Signup() {
