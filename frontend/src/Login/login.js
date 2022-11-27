@@ -19,34 +19,34 @@ export default function Login() {
       console.alert("Password Or email too small");
     }
 
-    let requestBody = {
+    let requestBody = JSON.stringify({
       email: email,
       password: password,
-    };
+    });
 
     if (user) {
       fetch("http://localhost:8080/login/", {
         method: "POST",
-        body: JSON.stringify(requestBody),
+        body: requestBody,
       }).then((res) => {
         if (res.status !== 200) {
-          console.alert("Auth Failed!!");
+          alert("Auth Failed!!");
           throw new Error("Authentication Failed !!");
         }
         setuser(true);
-        console.alert("Successful!!");
+        alert("Successful!!");
       });
     } else {
       fetch("http://localhost:8000/signup/", {
         method: "POST",
-        body: JSON.stringify(requestBody),
+        body: requestBody,
       }).then((res) => {
         if (res.status !== 200) {
-          console.alert("Auth Failed!!");
+          alert("Auth Failed!!");
           throw new Error("Authentication Failed !!");
         }
         setuser(true);
-        console.alert("Successful!!");
+        alert("Successful!!");
       });
     }
   };
