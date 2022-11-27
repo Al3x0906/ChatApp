@@ -23,21 +23,24 @@ export default function Login() {
       email: email,
       password: password,
     };
+
+
     if (user) {
-      fetch("http://localhost:8000/login/", {
+      fetch("http://localhost:8080/login/", {
         method: "POST",
         body: JSON.stringify(requestBody),
-        headers: {
-          "Content-Type": "application/json",
-        },
+      }).then((res) => {
+        if (res.status !== 200) {
+          console.alert("Auth Failed!!");
+          throw new Error("Authentication Failed !!");
+        }
+        setuser(true);
+        console.alert("Successful!!");
       });
     } else {
       fetch("http://localhost:8000/signup/", {
         method: "POST",
         body: JSON.stringify(requestBody),
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
     }
   };
