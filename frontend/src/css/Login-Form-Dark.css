@@ -1,0 +1,105 @@
+.login-dark {
+  height: 100vh;
+  background: #171717;
+  background-size: cover;
+  position: relative;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active  {
+  transition: background-color 500000s;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: white;
+}
+
+.psedotextarea {
+    -moz-appearance: textfield-multiline;
+    -webkit-appearance: textarea;
+    border: 1px solid gray;
+    font: medium -moz-fixed;
+    height: 28px;
+    overflow: auto;
+    padding: 2px;
+    resize: both;
+    width: 400px;
+}
+
+body {
+  height: 100%;
+}
+
+.login-dark form {
+  max-width: 320px;
+  width: 90%;
+  background-color: #202225;
+  padding: 40px;
+  border-radius: 4px;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  position: absolute;
+  top: 50%;left: 50%;
+  box-shadow: 0 0 20px 5px rgba(0,0,0,0.5);
+  transition: width 200ms;
+}
+
+.login-dark .illustration {
+  text-align: center;
+  padding: 15px 0 20px;
+  font-size: 100px;
+  color: #2980ef;
+}
+
+.login-dark .illustration img{
+  width: 90%;
+}
+
+.login-dark form .form-control {
+  background: none;
+  border: none;
+  border-bottom: 1px solid #434a52;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  color: inherit;
+}
+
+.login-dark form .btn-primary {
+  background: #214a80;
+  border: none;
+  border-radius: 4px;
+  padding: 11px;
+  box-shadow: none;
+  margin-top: 26px;
+  text-shadow: none;
+  outline: none;
+}
+
+.login-dark form .btn-primary:hover, .login-dark form .btn-primary:active {
+  background: #214a80;
+  outline: none;
+}
+
+.login-dark form .forgot {
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  color: #6f7a85;
+  opacity: 0.9;
+  text-decoration: none;
+}
+
+.login-dark form .forgot:hover, .login-dark form .forgot:active {
+  opacity: 1;
+  text-decoration: none;
+}
+
+.login-dark form .btn-primary{
+  opacity: 1;
+}
+
+.login-dark form .btn-primary:active {
+  transform: translateY(1px);
+}
+
