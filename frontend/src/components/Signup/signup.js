@@ -33,20 +33,27 @@ export default function SignUp() {
         password.trim().length > 0 &&
         repass.trim().length > 0 &&
         uname.trim().length > 0
-      )
-    ) {
-      throw new Error("Invalid data");
-    }
-    if (password !== repass) {
-      throw new Error("Password Donot Match");
-    }
-
-    let requestBody = JSON.stringify({
-      uname: uname,
-      email: email,
-      password: password,
-      repassword: repass,
-    });
+        )
+        ) {
+          alert("Invalid data");
+          throw new Error("Invalid data");
+        }
+        if (password !== repass) {
+          alert("pass donot match");
+          throw new Error("Password Donot Match");
+        }
+        
+        let requestBody = JSON.stringify({
+          uname: uname,
+          email: email,
+          password: password,
+          repassword: repass,
+        });
+        alert("OKKK");    
+        setuname("");
+        setemail("");
+        setpassword("");
+        setrepass("");
     fetch("http://localhost:8080/login/", {
       method: "POST",
       body: requestBody,
@@ -56,7 +63,7 @@ export default function SignUp() {
         alert("Auth Failed!!");
         throw new Error("Authentication Failed !!");
       }
-
+      
       alert("Successful!!");
     });
   };
