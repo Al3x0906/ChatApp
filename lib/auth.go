@@ -1,7 +1,7 @@
 package lib
 
 import (
-	"chatapp/auth/models"
+	"chatapp/models"
 	"errors"
 	"github.com/ikeikeikeike/gopkg/convert"
 	"time"
