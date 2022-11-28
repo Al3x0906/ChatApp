@@ -27,41 +27,69 @@ export default function SignUp() {
   };
   let submitHandler = (e) => {
     e.preventDefault();
-    if(email.trim().length > 0 && password.trim().length > 0 && repass.trim().length> 0 && uname.trim().length > 0){
-      
+    if (
+      !(
+        email.trim().length > 0 &&
+        password.trim().length > 0 &&
+        repass.trim().length > 0 &&
+        uname.trim().length > 0
+      )
+    ) {
+      throw new Error("Invalid data");
+    }
+    if (password !== repass) {
+      throw new Error("Password Donot Match");
     }
 
+    let requestBody = JSON.stringify({
+      uname: uname,
+      email: email,
+      password: password,
+      repassword: repass,
+    });
+    fetch("http://localhost:8080/login/", {
+      method: "POST",
+      body: requestBody,
+    }).then((res) => {
+      console.log(res);
+      if (res.status !== 200) {
+        alert("Auth Failed!!");
+        throw new Error("Authentication Failed !!");
+      }
 
+      alert("Successful!!");
+    });
   };
   return (
     <>
       <div>
         <Form className="form-control">
-          <Form.Group className="mb-3" controlId="formBasicEmail">
+          <Form.Group className="mb-3 " controlId="formBasicEmail">
             <Form.Control
+              style={{ "margin-bottom": "5px" }}
               type="uname"
-              placeholder="mark"
+              placeholder="Username"
               onChange={unameChange}
               value={uname}
             />
             <Form.Control
+              style={{ "margin-bottom": "5px" }}
               type="email"
-              placeholder="mark@yahoo.com "
+              placeholder="Email"
               onChange={emailChange}
               value={email}
             />
-          </Form.Group>
-
-          <Form.Group className="mb-3-dark" controlId="formBasicPassword">
             <Form.Control
+              style={{ "margin-bottom": "5px" }}
               type="password"
-              placeholder="********"
+              placeholder="Password"
               onChange={passChange}
               value={password}
             />
             <Form.Control
+              style={{ "margin-bottom": "5px" }}
               type="password"
-              placeholder="********"
+              placeholder="Confirm Password"
               onChange={repassChange}
               value={repass}
             />
