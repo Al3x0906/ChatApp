@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"chatapp/auth/models"
+	"chatapp/models"
 	"fmt"
 
 	"github.com/astaxie/beego"

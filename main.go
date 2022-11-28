@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "chatapp/auth/routers"
+	_ "chatapp/routers"
 	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"

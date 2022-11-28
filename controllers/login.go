@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"chatapp/auth/lib"
-	"chatapp/auth/models"
+	lib2 "chatapp/lib"
+	"chatapp/models"
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego"
@@ -48,7 +48,7 @@ func (c *LoginController) Login() {
 	email := response.Email
 	password := response.Password
 
-	user, err := lib.Authenticate(email, password)
+	user, err := lib2.Authenticate(email, password)
 	if err != nil || user.Id < 1 {
 		c.Data["json"] = LoginUser{IsLogin: false, Userinfo: nil, Status: 401}
 		c.ServeJSON()
@@ -88,7 +88,7 @@ func (c *LoginController) Signup() {
 		return
 	}
 
-	id, err := lib.SignupUser(u)
+	id, err := lib2.SignupUser(u)
 	if err != nil || id < 1 {
 		flash.Warning(err.Error())
 		flash.Store(&c.Controller)
