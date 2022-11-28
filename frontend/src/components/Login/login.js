@@ -34,11 +34,13 @@ export default function Login() {
       method: "POST",
       body: requestBody,
     }).then((res) => {
-      console.log(res);
-      if (res.status !== 200) {
-        alert("Auth Failed!!");
-        throw new Error("Authentication Failed !!");
-      }
+      res.json().then(function (result) {
+        console.log(result);
+        if (result.status !== 200) {
+          alert("Auth Failed!!");
+          throw new Error("Authentication Failed !!");
+        }
+      });
 
       alert("Successful!!");
     });

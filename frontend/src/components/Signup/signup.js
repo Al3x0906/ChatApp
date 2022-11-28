@@ -33,37 +33,39 @@ export default function SignUp() {
         password.trim().length > 0 &&
         repass.trim().length > 0 &&
         uname.trim().length > 0
-        )
-        ) {
-          alert("Invalid data");
-          throw new Error("Invalid data");
-        }
-        if (password !== repass) {
-          alert("pass donot match");
-          throw new Error("Password Donot Match");
-        }
-        
-        let requestBody = JSON.stringify({
-          uname: uname,
-          email: email,
-          password: password,
-          repassword: repass,
-        });
-        alert("OKKK");    
-        setuname("");
-        setemail("");
-        setpassword("");
-        setrepass("");
-    fetch("http://localhost:8080/login/", {
+      )
+    ) {
+      alert("Invalid data");
+      throw new Error("Invalid data");
+    }
+    if (password !== repass) {
+      alert("pass donot match");
+      throw new Error("Password Donot Match");
+    }
+
+    let requestBody = JSON.stringify({
+      uname: uname,
+      email: email,
+      password: password,
+      repassword: repass,
+    });
+    alert("OKKK");
+    setuname("");
+    setemail("");
+    setpassword("");
+    setrepass("");
+    fetch("http://localhost:8080/signup/", {
       method: "POST",
       body: requestBody,
     }).then((res) => {
-      console.log(res);
-      if (res.status !== 200) {
-        alert("Auth Failed!!");
-        throw new Error("Authentication Failed !!");
-      }
-      
+      res.json().then(function (result) {
+        console.log(result);
+        if (result.status !== 200) {
+          alert("Auth Failed!!");
+          throw new Error("Authentication Failed !!");
+        }
+      });
+
       alert("Successful!!");
     });
   };
