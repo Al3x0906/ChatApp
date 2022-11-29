@@ -1,6 +1,8 @@
 import React from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
+import { useDispatch } from "react-redux";
+import { login } from "../../features/userSlice";
 
 export default function SignUp() {
   const [email, setemail] = React.useState("");
@@ -25,6 +27,8 @@ export default function SignUp() {
   const repassChange = (e) => {
     setrepass(e.target.value);
   };
+  const dispatch = useDispatch();
+
   let submitHandler = (e) => {
     e.preventDefault();
     if (
@@ -54,20 +58,28 @@ export default function SignUp() {
     setemail("");
     setpassword("");
     setrepass("");
-    fetch("http://"+ window.location.hostname + ":8080/signup/", {
+    fetch("http://" + window.location.hostname + ":8080/signup/", {
       method: "POST",
-      credentials: 'include',
+      credentials: "include",
       body: requestBody,
     }).then((res) => {
       res.json().then(function (result) {
         console.log(result);
+
         if (result.status !== 200) {
           alert("Auth Failed!!");
           throw new Error("Authentication Failed !!");
+        } else {
+          const { username, id, email } = result.userinfo;
+          dispatch(
+            login({
+              username: username,
+              userid: id,
+              email: email,
+            })
+          );
         }
       });
-
-      alert("Successful!!");
     });
   };
   return (
@@ -76,28 +88,28 @@ export default function SignUp() {
         <Form className="form-control">
           <Form.Group className="mb-3 " controlId="formBasicEmail">
             <Form.Control
-              style={{ "margin-bottom": "5px" }}
+              style={{ marginBottom: "5px" }}
               type="uname"
               placeholder="Username"
               onChange={unameChange}
               value={uname}
             />
             <Form.Control
-              style={{ "margin-bottom": "5px" }}
+              style={{ marginBottom: "5px" }}
               type="email"
               placeholder="Email"
               onChange={emailChange}
               value={email}
             />
             <Form.Control
-              style={{ "margin-bottom": "5px" }}
+              style={{ marginBottom: "5px" }}
               type="password"
               placeholder="Password"
               onChange={passChange}
               value={password}
             />
             <Form.Control
-              style={{ "margin-bottom": "5px" }}
+              style={{ marginBottom: "5px" }}
               type="password"
               placeholder="Confirm Password"
               onChange={repassChange}

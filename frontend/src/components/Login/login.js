@@ -1,7 +1,8 @@
 import React from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-
+import { useDispatch } from "react-redux";
+import { login } from "../../features/userSlice";
 import "./login.css";
 export default function Login() {
   const [email, setemail] = React.useState("");
@@ -15,6 +16,8 @@ export default function Login() {
   const passChange = (e) => {
     setpassword(e.target.value);
   };
+
+  const dispatch = useDispatch();
 
   let submitHandler = (e) => {
     e.preventDefault();
@@ -32,7 +35,7 @@ export default function Login() {
     setpassword("");
     fetch("http://" + window.location.hostname + ":8080/login/", {
       method: "POST",
-      credentials: 'include',
+      credentials: "include",
       body: requestBody,
     }).then((res) => {
       res.json().then(function (result) {
@@ -40,10 +43,17 @@ export default function Login() {
         if (result.status !== 200) {
           alert("Auth Failed!!");
           throw new Error("Authentication Failed !!");
+        } else {
+          const { username, id, email } = result.userinfo;
+          dispatch(
+            login({
+              username: username,
+              userid: id,
+              email: email,
+            })
+          );
         }
       });
-
-      alert("Successful!!");
     });
   };
 
