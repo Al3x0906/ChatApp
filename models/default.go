@@ -10,6 +10,7 @@ import (
 type User struct {
 	Id            int64
 	Email         string    `orm:"size(64);unique" form:"Email" valid:"Required;Email"`
+	Username      string    `orm:"size(64)" valid:"Required"`
 	Password      string    `orm:"size(32)" form:"Password" valid:"Required;MinSize(6)"`
 	Repassword    string    `orm:"-" form:"Repassword" valid:"Required"`
 	Lastlogintime time.Time `orm:"type(datetime);null" form:"-"`

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/session"
 	"github.com/ikeikeikeike/gopkg/convert"
 )
 
@@ -13,6 +14,7 @@ type BaseController struct {
 
 	Userinfo *models.User
 	IsLogin  bool
+	Session  session.Store
 }
 
 type NestPreparer interface {
@@ -25,28 +27,27 @@ type NestFinisher interface {
 
 func (c *BaseController) Prepare() {
 	c.SetParams()
-
-	c.IsLogin = c.GetSession("Userinfo") != nil
+	if c.Session == nil {
+		c.Session = c.StartSession()
+	}
+	c.IsLogin = c.Session.Get("Userinfo") != nil
 	if c.IsLogin {
 		c.Userinfo = c.GetLogin()
 	}
-	fmt.Println("fuck")
-	c.Data["IsLogin"] = c.IsLogin
-	c.Data["Userinfo"] = c.Userinfo
 
-	if app, ok := c.AppController.(NestPreparer); ok {
-		app.NestPrepare()
-	}
+	//if app, ok := c.AppController.(NestPreparer); ok {
+	//	app.NestPrepare()
+	//}
 }
 
 func (c *BaseController) Finish() {
-	if app, ok := c.AppController.(NestFinisher); ok {
-		app.NestFinish()
-	}
+	//if app, ok := c.AppController.(NestFinisher); ok {
+	//	app.NestFinish()
+	//}
 }
 
 func (c *BaseController) GetLogin() *models.User {
-	u := &models.User{Id: c.GetSession("userinfo").(int64)}
+	u := c.Session.Get("Userinfo").(*models.User)
 	err := u.Read()
 	if err != nil {
 		return nil
@@ -55,11 +56,13 @@ func (c *BaseController) GetLogin() *models.User {
 }
 
 func (c *BaseController) DelLogin() {
-	c.DelSession("userinfo")
+	_ = c.Session.Delete("userinfo")
 }
 
 func (c *BaseController) SetLogin(user *models.User) {
-	c.SetSession("userinfo", user.Id)
+	_ = c.Session.Set("Userinfo", user)
+	c.Userinfo = user
+	c.IsLogin = true
 }
 
 func (c *BaseController) LoginPath() string {

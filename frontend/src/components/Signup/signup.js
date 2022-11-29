@@ -7,7 +7,7 @@ export default function SignUp() {
 
   const [password, setpassword] = React.useState("");
 
-  const [repass, setrepass] = React.useState();
+  const [repass, setrepass] = React.useState("");
 
   const [uname, setuname] = React.useState("");
 
@@ -54,8 +54,9 @@ export default function SignUp() {
     setemail("");
     setpassword("");
     setrepass("");
-    fetch("http://localhost:8080/signup/", {
+    fetch("http://"+ window.location.hostname + ":8080/signup/", {
       method: "POST",
+      credentials: 'include',
       body: requestBody,
     }).then((res) => {
       res.json().then(function (result) {

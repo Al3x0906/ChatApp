@@ -30,8 +30,9 @@ export default function Login() {
     });
     setemail("");
     setpassword("");
-    fetch("http://localhost:8080/login/", {
+    fetch("http://" + window.location.hostname + ":8080/login/", {
       method: "POST",
+      credentials: 'include',
       body: requestBody,
     }).then((res) => {
       res.json().then(function (result) {
