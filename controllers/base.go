@@ -56,7 +56,7 @@ func (c *BaseController) GetLogin() *models.User {
 }
 
 func (c *BaseController) DelLogin() {
-	_ = c.Session.Delete("userinfo")
+	_ = c.Session.Delete("Userinfo")
 }
 
 func (c *BaseController) SetLogin(user *models.User) {
