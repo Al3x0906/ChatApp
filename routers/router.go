@@ -11,4 +11,7 @@ func init() {
 	beego.Router("/login/", &controllers.LoginController{}, "get,post:Login")
 	beego.Router("/logout/", &controllers.LoginController{}, "post:Logout")
 	beego.Router("/signup/", &controllers.LoginController{}, "post:Signup")
+
+	// WebSocket.
+	beego.Router("/ws/join", &controllers.WebSocketController{}, "get:Join")
 }

@@ -17,14 +17,6 @@ type BaseController struct {
 	Session  session.Store
 }
 
-type NestPreparer interface {
-	NestPrepare()
-}
-
-type NestFinisher interface {
-	NestFinish()
-}
-
 func (c *BaseController) Prepare() {
 	c.SetParams()
 	if c.Session == nil {
@@ -35,15 +27,6 @@ func (c *BaseController) Prepare() {
 		c.Userinfo = c.GetLogin()
 	}
 
-	//if app, ok := c.AppController.(NestPreparer); ok {
-	//	app.NestPrepare()
-	//}
-}
-
-func (c *BaseController) Finish() {
-	//if app, ok := c.AppController.(NestFinisher); ok {
-	//	app.NestFinish()
-	//}
 }
 
 func (c *BaseController) GetLogin() *models.User {
