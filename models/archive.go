@@ -9,8 +9,8 @@ import (
 )
 
 func connect() (*mongo.Client, context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	ctx, cancel := context.WithTimeout(context.Background(), 999999*time.Hour)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://127.0.0.1:27017/"))
 	if err == nil {
 		fmt.Println("Mongo Connected")
 	} else {
@@ -26,6 +26,7 @@ var (
 	ChatCollection     = DataBase.Collection("chat")
 	counter            = DataBase.Collection("counter")
 	MessageCounter     int64
+	ChatCounter        int64
 )
 
 type EventType string
