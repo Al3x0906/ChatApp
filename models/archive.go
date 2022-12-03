@@ -3,8 +3,10 @@ package models
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sync"
 	"time"
 )
 
@@ -27,6 +29,18 @@ var (
 	counter            = DataBase.Collection("counter")
 	MessageCounter     int64
 	ChatCounter        int64
+	MessageMutex       sync.Mutex
+	ZeroTime           = time.Time{}
 )
 
 type EventType string
+
+func init() {
+	var result bson.D
+	_ = counter.FindOne(ctx, bson.D{{"collection", "Messages"}}).Decode(&result)
+	MessageCounter = result.Map()["count"].(int64)
+
+	result = bson.D{}
+	_ = counter.FindOne(ctx, bson.D{{"collection", "Chat"}}).Decode(&result)
+	ChatCounter = result.Map()["count"].(int64)
+}

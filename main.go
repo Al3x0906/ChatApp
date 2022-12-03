@@ -8,9 +8,12 @@ import (
 	"github.com/astaxie/beego/plugins/cors"
 	"github.com/astaxie/beego/session"
 	_ "github.com/go-sql-driver/mysql"
+	"runtime"
 )
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	_ = orm.RegisterDriver("mysql", orm.DRMySQL)
 	_ = orm.RegisterDataBase("default", "mysql", "root:root@/chatapp?charset=utf8")
 

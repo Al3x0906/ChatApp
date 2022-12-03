@@ -1,36 +1,27 @@
 package controllers
 
 import (
-	"bytes"
 	"chatapp/models"
-	"log"
-	"time"
-
+	"encoding/json"
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson"
+	"strings"
+	"time"
 )
 
-const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-)
-
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
-)
+type BroadcastEvent struct {
+	Type_   models.EventType `json:"type"`
+	Message *models.Message  `json:"message"`
+}
 
 func Join(chat *models.Chat, user *models.User, ws *websocket.Conn) *Client {
 	hub, ok := Rooms[chat.Id]
 	if !ok {
-		hub = newHub()
+		hub = newHub(chat)
+		Rooms[chat.Id] = hub
+		go hub.run()
 	}
-	client := &Client{hub: hub, user: user, conn: ws}
+	client := &Client{hub: hub, user: user, conn: ws, send: make(chan *BroadcastEvent)}
 	hub.register <- client
 	return client
 }
@@ -38,6 +29,7 @@ func Join(chat *models.Chat, user *models.User, ws *websocket.Conn) *Client {
 func Leave(client *Client) {
 	hub := client.hub
 	hub.unregister <- client
+	close(client.send)
 	_ = client.conn.Close()
 }
 
@@ -49,7 +41,7 @@ type Client struct {
 	conn *websocket.Conn
 
 	// Buffered channel of outbound messages.
-	send chan []byte
+	send chan *BroadcastEvent
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -59,20 +51,75 @@ type Client struct {
 // reads from this goroutine.
 func (c *Client) readPump() {
 	defer func() {
-		c.hub.unregister <- c
-		_ = c.conn.Close()
+		Leave(c)
 	}()
 
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, req, err := c.conn.ReadMessage()
+		var m bson.M
+		errUnmarshal := json.Unmarshal(req, &m)
+
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		if errUnmarshal != nil {
+			continue
+		}
+
+		t, ok := m["type"].(string)
+		if !ok {
+			continue
+		}
+		switch t {
+		case models.EventMessage:
+			content, ok := m["content"].(string)
+			if !ok {
+				continue
+			}
+			if content := strings.TrimSpace(content); content == "" {
+				continue
+			}
+			receiver := models.IfThenElse(c.user.Id == c.hub.chat.User1, c.hub.chat.User2, c.hub.chat.User1)
+			mess := &models.Message{Chat: c.hub.chat.Id, Sender: c.user.Id, Receiver: receiver.(int64), Content: []byte(content), Sent: time.Now()}
+			err = mess.Insert()
+			if err != nil {
+				continue
+			}
+			c.hub.broadcast <- &BroadcastEvent{models.EventMessage, mess}
+
+		case models.EventDelete:
+			id, ok := m["id"].(float64)
+			if !ok {
+				continue
+			}
+
+			mess := &models.Message{Id: int64(id), Chat: c.hub.chat.Id, Sender: c.user.Id}
+			count, err := mess.Delete()
+			if err != nil || count == 0 {
+				continue
+			}
+			c.hub.broadcast <- &BroadcastEvent{models.EventDelete, mess}
+
+		case models.EventEdit:
+			id, ok := m["id"].(float64)
+			if !ok {
+				continue
+			}
+			content, ok := m["content"].(string)
+			if !ok {
+				continue
+			}
+			if content := strings.TrimSpace(content); content == "" {
+				continue
+			}
+
+			mess := &models.Message{Id: int64(id), Chat: c.hub.chat.Id, Sender: c.user.Id, Content: []byte(content)}
+			count, err := mess.Update()
+			if err != nil || count == 0 {
+				continue
+			}
+			c.hub.broadcast <- &BroadcastEvent{models.EventEdit, mess}
+		}
 	}
 }
 
@@ -82,41 +129,31 @@ func (c *Client) readPump() {
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
 func (c *Client) writePump() {
-	ticker := time.NewTicker(pingPeriod)
 	defer func() {
-		ticker.Stop()
-		c.conn.Close()
+		_ = c.conn.Close()
 	}()
 	for {
 		select {
-		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+		case event, ok := <-c.send:
+
+			// if socket closed
 			if !ok {
-				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
+			err := c.conn.WriteJSON(event)
 			if err != nil {
 				return
 			}
-			w.Write(message)
 
-			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-c.send)
-			}
-
-			if err := w.Close(); err != nil {
-				return
-			}
-		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
+			if event.Type_ == models.EventMessage && event.Message.Receiver != c.user.Id && event.Message.Seen == models.ZeroTime {
+				event.Message.Seen = time.Now()
+				err := event.Message.SetSeen()
+				if err != nil {
+					continue
+				}
+				c.hub.broadcast <- &BroadcastEvent{models.EventSeen, event.Message}
 			}
 		}
 	}

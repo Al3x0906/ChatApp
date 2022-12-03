@@ -12,20 +12,20 @@ type Message struct {
 	Chat     int64     `json:"chat"`
 	Sender   int64     `json:"sender"`
 	Receiver int64     `json:"receiver"`
-	Content  string    `json:"message"`
+	Content  []byte    `json:"message"`
 	Sent     time.Time `json:"sent"`
 	Seen     time.Time `json:"seen"`
 	Edited   time.Time `json:"edited"`
 }
 
-func (message Message) objToBson(id int64) bson.D {
-	var result bson.D
-	_ = counter.FindOne(ctx, bson.D{{"collection", "Messages"}}).Decode(&result)
-	MessageCounter = result.Map()["count"].(int64)
+func (message *Message) objToBson(id int64) bson.D {
+	MessageMutex.Lock()
+	message.Id = IfThenElse(id == -1, MessageCounter, id).(int64)
+	MessageCounter += 1
+	MessageMutex.Unlock()
 
-	id = IfThenElse(id == -1, MessageCounter, id).(int64)
 	return bson.D{
-		{"id", id},
+		{"id", message.Id},
 		{"chat", message.Chat},
 		{"sender", message.Sender},
 		{"Receiver", message.Receiver},
@@ -36,43 +36,38 @@ func (message Message) objToBson(id int64) bson.D {
 	}
 }
 
-func (message Message) Insert() error {
-	message.Sent = time.Now()
-
+func (message *Message) Insert() error {
 	doc := message.objToBson(-1)
+
+	_, _ = counter.UpdateOne(ctx,
+		bson.D{{"collection", "Messages"}},
+		bson.D{{"$set", bson.D{{"count", MessageCounter}}}})
+
 	_, err := MessagesCollection.InsertOne(ctx, doc)
-
-	if err == nil {
-		_, _ = counter.UpdateOne(ctx,
-			bson.D.Map(bson.D{{"MessagesCollection", "Messages"}}),
-			bson.D{{"count", MessageCounter + 1}})
-	}
-
 	return err
 }
 
-func MapMessage(message Message, d bson.M) {
+func (message *Message) MapMessage(d bson.M) {
 	message.Id = d["id"].(int64)
 	message.Chat = d["chat"].(int64)
 	message.Sender = d["sender"].(int64)
 	message.Receiver = d["receiver"].(int64)
-	message.Content = d["content"].(string)
+	message.Content = d["content"].([]byte)
 	message.Sent = d["sent"].(time.Time)
 	message.Seen = d["seen"].(time.Time)
 	message.Edited = d["edited"].(time.Time)
 }
 
-func (message Message) Get(id, chat, user int64) error {
+func (message *Message) Get(id, chat, user int64) error {
 	filter := bson.D{{"id", id}, {"chat", chat}}
 
-	var result bson.D
-	err := MessagesCollection.FindOne(ctx, filter).Decode(&result)
+	var d bson.M
+	err := MessagesCollection.FindOne(ctx, filter).Decode(&d)
 
 	if err == nil {
-		d := result.Map()
 		fmt.Println(d)
 		if d["sender"].(int64) == user || d["receiver"].(int64) == user {
-			MapMessage(message, d)
+			message.MapMessage(d)
 		} else {
 			err = errors.New("user not allowed to see message")
 		}
@@ -81,19 +76,27 @@ func (message Message) Get(id, chat, user int64) error {
 	return err
 }
 
-func (message Message) Update(id, chat int64) error {
-	filter := bson.D{{"id", id}, {"chat", chat}}
-	doc := message.objToBson(id)
+func (message *Message) Update() (int64, error) {
+	filter := bson.D{{"id", message.Id}, {"chat", message.Chat}, {"sender", message.Sender}}
+	doc := bson.D{{"$set", bson.D{{"content", message.Content}, {"edited", time.Now()}}}}
+
+	result, err := MessagesCollection.UpdateOne(ctx, filter, doc)
+	return result.ModifiedCount, err
+}
+
+func (message *Message) SetSeen() error {
+	filter := bson.D{{"id", message.Id}}
+	doc := bson.D{{"$set", bson.D{{"seen", message.Seen}}}}
 
 	_, err := MessagesCollection.UpdateOne(ctx, filter, doc)
 	return err
 }
 
-func (message Message) Delete(id, chat int64) error {
-	filter := bson.D{{"id", id}, {"chat", chat}}
-	_, err := MessagesCollection.DeleteOne(ctx, filter)
+func (message *Message) Delete() (int64, error) {
+	filter := bson.D{{"id", message.Id}, {"chat", message.Chat}, {"sender", message.Sender}}
+	result, err := MessagesCollection.DeleteOne(ctx, filter)
 
-	return err
+	return result.DeletedCount, err
 }
 
 // TODO: Load old or messages on join

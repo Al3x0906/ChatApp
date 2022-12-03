@@ -1,11 +1,9 @@
 package controllers
 
 import (
-	"bytes"
-	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
+	"regexp"
 
 	"chatapp/models"
 	"github.com/gorilla/websocket"
@@ -18,49 +16,42 @@ type WebSocketController struct {
 
 // Join method handles WebSocket requests for WebSocketController.
 func (c *WebSocketController) Join() {
+	defer c.ServeJSON()
+
 	chatid, err := c.GetInt64("chat")
-	fmt.Println("go", err, chatid, c.Userinfo)
 
 	if err != nil || c.Userinfo == nil {
-		fmt.Println("No user or chat")
-		c.Data["json"] = bson.M{"Fuck": "you", "why": "you"}
-		c.ServeJSON()
+		log.Println("No user or chat")
 		return
 	}
 
 	chat, err := models.IsAllowed(chatid, c.Userinfo.Id)
 	if err != nil {
-		fmt.Println("Not Allowed")
-		c.Data["json"] = bson.M{"Fuck": "you"}
-		c.ServeJSON()
+		log.Println("Not allowed", chatid, c.Userinfo.Id)
 		return
 	}
-	fmt.Println("Allowed")
+	log.Println("welcome")
 
 	// Upgrade from http request to WebSocket.
-	upgrader := websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024}
+	upgrader := websocket.Upgrader{ReadBufferSize: 1024, WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			re := regexp.MustCompile(`^http://(localhost|127\.0\.0\.1):(3000|8080)`)
+			matches := re.FindStringSubmatch(r.Header.Get("Origin"))
+			return len(matches) > 0
+		},
+	}
+
 	ws, err := upgrader.Upgrade(c.Ctx.ResponseWriter, c.Ctx.Request, nil)
 	if _, ok := err.(websocket.HandshakeError); ok {
 		http.Error(c.Ctx.ResponseWriter, "Not a websocket handshake", 400)
 		return
 	} else if err != nil {
-		fmt.Println("Cannot setup WebSocket connection:", err)
 		return
 	}
 
 	// Join chat room.
 	client := Join(chat, c.Userinfo, ws)
-	defer Leave(client)
+	go client.writePump()
+	go client.readPump()
 
-	for {
-		_, message, err := ws.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
-			break
-		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		client.hub.broadcast <- message
-	}
 }

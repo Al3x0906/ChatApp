@@ -1,12 +1,14 @@
 package controllers
 
-import "chatapp/models"
+import (
+	"chatapp/models"
+)
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 
 var (
-	Rooms map[int64]*Hub
+	Rooms = map[int64]*Hub{}
 )
 
 type Hub struct {
@@ -15,24 +17,25 @@ type Hub struct {
 	chat    *models.Chat
 
 	// Inbound messages from the clients.
-	broadcast chan []byte
+	broadcast chan *BroadcastEvent
 
 	// Register/Unregister requests from the clients.
 	register   chan *Client
 	unregister chan *Client
 }
 
-func newHub() *Hub {
+func newHub(chat *models.Chat) *Hub {
 	return &Hub{
-		broadcast:  make(chan []byte),
+		broadcast:  make(chan *BroadcastEvent),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    []*Client{},
+		chat:       chat,
 	}
 }
 
 func (h *Hub) run() {
-	for {
+	for loop := true; loop; {
 		select {
 		case client := <-h.register:
 			if h.chat.User1 == client.user.Id || h.chat.User2 == client.user.Id {
@@ -46,9 +49,16 @@ func (h *Hub) run() {
 					break
 				}
 			}
-		case message := <-h.broadcast:
+			if len(h.clients) == 0 {
+				delete(Rooms, h.chat.Id)
+				close(h.register)
+				close(h.unregister)
+				close(h.broadcast)
+				loop = false
+			}
+		case event := <-h.broadcast:
 			for _, client := range h.clients {
-				client.send <- message
+				client.send <- event
 			}
 		}
 	}

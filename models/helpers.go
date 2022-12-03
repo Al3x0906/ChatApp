@@ -2,17 +2,14 @@ package models
 
 import (
 	"errors"
-
 	"github.com/astaxie/beego/validation"
 )
 
 const (
-	EventJoin    = "join"
-	EventLeave   = "leave"
 	EventMessage = "message"
 	EventDelete  = "delete"
 	EventEdit    = "edit"
-	EventFirst   = "first"
+	EventSeen    = "seen"
 )
 
 type Event struct {
@@ -23,7 +20,7 @@ type Event struct {
 	Content   string
 }
 
-func IfThenElse(condition bool, a interface{}, b interface{}) interface{} {
+func IfThenElse(condition bool, a any, b any) any {
 	if condition {
 		return a
 	}
